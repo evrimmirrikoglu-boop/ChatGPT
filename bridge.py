@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import asyncio
 import json
 import os
@@ -11,11 +12,6 @@ from threading import Thread
 
 import websockets
 from pynput.mouse import Button, Controller
-
-HTTP_HOST = "0.0.0.0"
-HTTP_PORT = 8765
-WS_HOST = "0.0.0.0"
-WS_PORT = 8766
 
 mouse = Controller()
 SESSION_TOKEN = secrets.token_urlsafe(6)
@@ -32,10 +28,10 @@ def get_local_ip() -> str:
         s.close()
 
 
-def run_http_server() -> None:
+def run_http_server(host: str, port: int) -> None:
     web_dir = pathlib.Path(__file__).parent / "web"
     handler = partial(SimpleHTTPRequestHandler, directory=str(web_dir))
-    server = ThreadingHTTPServer((HTTP_HOST, HTTP_PORT), handler)
+    server = ThreadingHTTPServer((host, port), handler)
     server.serve_forever()
 
 
@@ -78,19 +74,39 @@ async def handle_client(websocket: websockets.WebSocketServerProtocol) -> None:
             mouse.click(Button.left, 2)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="PhonePad Web desktop bridge")
+    parser.add_argument("--http-host", default="0.0.0.0", help="HTTP host (default: 0.0.0.0)")
+    parser.add_argument("--http-port", type=int, default=8765, help="HTTP port (default: 8765)")
+    parser.add_argument("--ws-host", default="0.0.0.0", help="WebSocket host (default: 0.0.0.0)")
+    parser.add_argument("--ws-port", type=int, default=8766, help="WebSocket port (default: 8766)")
+    parser.add_argument(
+        "--public-url",
+        default="",
+        help="Telefonunda açacağın public URL (örn: https://pad.senin-domainin.com)",
+    )
+    return parser.parse_args()
+
+
 async def main() -> None:
+    args = parse_args()
     local_ip = get_local_ip()
 
     print("\n=== PhonePad Web hazır ===")
-    print(f"Telefonunda aç: http://{local_ip}:{HTTP_PORT}")
-    print(f"WebSocket: ws://{local_ip}:{WS_PORT}")
+    print("Yerel ağ:")
+    print(f"  UI: http://{local_ip}:{args.http_port}")
+    print(f"  WS: ws://{local_ip}:{args.ws_port}")
+    if args.public_url:
+        print("İnternet üzerinden:")
+        print(f"  UI: {args.public_url}")
+        print("  WS: public URL'inle aynı hostu kullan (https ise wss://)")
     print(f"Token: {SESSION_TOKEN}")
     print("(Çıkış için Ctrl+C)\n")
 
-    http_thread = Thread(target=run_http_server, daemon=True)
+    http_thread = Thread(target=run_http_server, args=(args.http_host, args.http_port), daemon=True)
     http_thread.start()
 
-    async with websockets.serve(handle_client, WS_HOST, WS_PORT, max_size=1024):
+    async with websockets.serve(handle_client, args.ws_host, args.ws_port, max_size=1024):
         await asyncio.Future()
 
 

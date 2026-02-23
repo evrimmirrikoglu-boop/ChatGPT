@@ -18,20 +18,37 @@ iPhone (veya herhangi bir telefon) tarayıcısını, bilgisayarında **gerçek s
 ## Gereksinimler
 
 - Python 3.10+
-- Aynı Wi‑Fi ağına bağlı telefon + bilgisayar
 - Bağımlılıklar:
   - `websockets`
   - `pynput`
 
-Kurulum:
+## Kurulum
+
+### Windows (`py` komutu olan sistemler)
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\activate
+py -m pip install -r requirements.txt
+```
+
+### macOS / Linux
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ## Çalıştırma
+
+### Windows
+
+```powershell
+py bridge.py
+```
+
+### macOS / Linux
 
 ```bash
 python3 bridge.py
@@ -40,11 +57,40 @@ python3 bridge.py
 Sonra terminalde görünen adımları takip et:
 
 1. Script sana bilgisayar IP adresini ve token'ı verir.
-2. Telefonda şu adresi aç: `http://BILGISAYAR_IP:8765`
+2. Telefonda aç: `http://BILGISAYAR_IP:8765`
 3. Ekrandaki token alanına terminalde yazan token'ı gir.
-4. Connect'e bas.
+4. **Bağlan** butonuna bas.
 
-Artık telefon touchpad olarak çalışır.
+## Aynı Wi‑Fi zorunlu mu?
+
+Hayır, zorunlu değil. 2 kullanım şekli var:
+
+1. **Aynı ağ (en düşük gecikme)**
+   - Direkt `http://BILGISAYAR_IP:8765` üzerinden bağlan.
+
+2. **Farklı ağ / internet üzerinden**
+   - Bilgisayardaki `8765` (UI) ve `8766` (WS) portlarını dışarı açman gerekir.
+   - En pratik yöntemler:
+     - Tailscale / ZeroTier ile sanal aynı ağ kurmak (önerilir).
+     - Router port forwarding + domain/reverse proxy.
+   - Eğer siteyi `https://` ile açıyorsan WebSocket adresi `wss://` olmalı.
+
+İstersen scripti public URL bilgisiyle başlatabilirsin:
+
+```bash
+python3 bridge.py --public-url https://pad.senin-domainin.com
+```
+
+## İndirme
+
+Bu ortamda sana herkese açık bir dosya hosting linki üretemiyorum; ama projeyi bu depodan ZIP olarak indirebilirsin:
+
+- GitHub'da: **Code → Download ZIP**
+- veya terminal:
+
+```bash
+git clone <repo-url>
+```
 
 ## Ayarlar
 
@@ -53,6 +99,6 @@ Artık telefon touchpad olarak çalışır.
 
 ## Güvenlik
 
-- Sunucu yalnızca local ağ için tasarlandı.
 - Token eşleşmesi olmadan komut kabul etmez.
-- İstersen `bridge.py` içinde host/port değerlerini değiştir.
+- İnternetten açarsan mutlaka güçlü ağ kuralları/VPN kullan.
+- `bridge.py` içinde host/port parametrelerini CLI ile değiştirebilirsin.

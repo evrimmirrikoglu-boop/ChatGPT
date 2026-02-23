@@ -8,7 +8,8 @@ const sensitivityInput = document.getElementById('sensitivity');
 const sensValue = document.getElementById('sensValue');
 const invertScrollInput = document.getElementById('invertScroll');
 
-serverUrlInput.value = `ws://${location.hostname}:8766`;
+const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+serverUrlInput.value = `${wsProtocol}://${location.hostname}:8766`;
 
 let socket = null;
 let connected = false;
