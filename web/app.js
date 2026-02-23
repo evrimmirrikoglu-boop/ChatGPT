@@ -30,8 +30,8 @@ function setStatus(text, ok = false) {
   statusEl.classList.toggle('ok', ok);
 }
 
-function send(type, payload = {}) {
-  if (!connected || socket?.readyState !== WebSocket.OPEN) return;
+function send(type, payload = {}, { allowBeforeAuth = false } = {}) {
+  if ((!connected && !allowBeforeAuth) || socket?.readyState !== WebSocket.OPEN) return;
   socket.send(JSON.stringify({ type, ...payload }));
 }
 
@@ -63,7 +63,7 @@ connectBtn.addEventListener('click', () => {
   socket = new WebSocket(serverUrl);
 
   socket.addEventListener('open', () => {
-    send('auth', { token });
+    send('auth', { token }, { allowBeforeAuth: true });
     setStatus('Kimlik doğrulama...');
   });
 
